@@ -607,6 +607,29 @@ func validateMerkleTreeTrimNodes(nodes []*MerkleNode, ts types.Timestamp) []*Mer
 	return nodes[:idx]
 }
 
+/*
+DiffMerkleTree
+
+return: myNewNodes, theirNewNodes, isValid
+*/
+func DiffMerkleTree(
+	myNodes []*MerkleNode,
+	theirNodes []*MerkleNode,
+	ts types.Timestamp,
+) ([]*MerkleNode, []*MerkleNode, bool) {
+
+	myNodes = validateMerkleTreeTrimNodes(myNodes, ts)
+	theirNodes = validateMerkleTreeTrimNodes(theirNodes, ts)
+
+	pMyNodes := myNodes
+	pTheirNodes := theirNodes
+
+	for len(pMyNodes) > 0 && len(pTheirNodes) > 0 {
+	}
+
+	return nil, nil, true
+}
+
 func (m *Merkle) Clean() {
 	var key []byte
 
