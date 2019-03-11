@@ -51,6 +51,11 @@ type Merkle struct {
 	GenerateSeconds              time.Duration
 	ExpireGenerateSeconds        int64
 
+	lockIsBusyForceSync sync.Mutex
+	isBusyForceSync     bool
+
+	forceSync chan struct{}
+
 	lockToUpdateTS sync.Mutex
 	toUpdateTS     map[int64]bool
 }
@@ -84,6 +89,7 @@ func NewMerkle(dbOplogPrefix []byte, dbMerklePrefix []byte, prefixID *types.PttI
 		GenerateSeconds:       GenerateOplogMerkleTreeSeconds,
 		ExpireGenerateSeconds: ExpireGenerateOplogMerkleTreeSeconds,
 		toUpdateTS:            make(map[int64]bool),
+		forceSync:             make(chan struct{}),
 	}
 
 	lastGenerateTS, err := m.GetGenerateTime()
@@ -856,4 +862,30 @@ func (m *Merkle) ResetUpdatingTSList() error {
 	m.db.DB().Delete(key)
 
 	return nil
+}
+
+func (m *Merkle) TryLockForceSync() error {
+	m.lockIsBusyForceSync.Lock()
+	defer m.lockIsBusyForceSync.Unlock()
+
+	if m.isBusyForceSync {
+		return types.ErrBusy
+	}
+
+	m.isBusyForceSync = true
+
+	return nil
+}
+
+func (m *Merkle) UnlockForceSync() error {
+	m.lockIsBusyForceSync.Lock()
+	defer m.lockIsBusyForceSync.Unlock()
+
+	m.isBusyForceSync = false
+
+	return nil
+}
+
+func (m *Merkle) ForceSync() chan struct{} {
+	return m.forceSync
 }
